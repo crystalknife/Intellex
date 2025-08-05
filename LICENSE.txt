@@ -1,5 +1,5 @@
 Intellex Custom License v1.0
-Copyright © 2025 Balasubrahmanya
+Copyright © 2025 Balasubrahmanya A G
 
 1. Permission to Use and Modify
 
@@ -29,10 +29,7 @@ You are permitted to use, copy, modify, and contribute to this project for perso
 5. Requesting Commercial License
 
 To request a commercial license, reach out via:
-
-Email: your.email@example.com
-GitHub: https://github.com/yourusername
-
+Email: subrahmanyaprasad23balu@gmail.com
 You may be granted a commercial license under specific terms agreed upon by the author.
 
 6. This License Is Not Open Source (OSI)
