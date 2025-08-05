@@ -1,0 +1,48 @@
+Intellex Custom License v1.0
+Copyright © 2025 Balasubrahmanya
+
+1. Permission to Use and Modify
+
+You are permitted to use, copy, modify, and contribute to this project for personal, educational, or non-commercial purposes only, under the following terms:
+
+- You must give appropriate credit to the original author, Balasubrahmanya, in any derivative work, fork, or public distribution.
+- You may adapt, enhance, or improve the code or structure as long as attribution is clearly maintained.
+
+2. Non-Commercial Use Only
+
+- You may not use this project, in whole or in part, for commercial purposes—including selling, licensing, or monetizing the project—without explicit written permission from the original author.
+- “Commercial use” includes any activity that generates income, either directly or indirectly, such as:
+  - Selling derivative works or services built upon this project.
+  - Monetizing websites, products, or APIs that use this system.
+  - Incorporating this work into a commercial offering or SaaS.
+
+3. Distribution Restrictions
+
+- Redistribution of this work or its derivatives must include this license and appropriate credit to the original author.
+- Any unauthorized commercial distribution, reproduction, or usage for profit is a violation of this license and may result in legal consequences.
+
+4. Enforcement and Liability
+
+- Violating this license by using this project for commercial gain without permission may lead to civil or legal action.
+- The author is not liable for any damages, losses, or legal claims resulting from improper use of this software.
+
+5. Requesting Commercial License
+
+To request a commercial license, reach out via:
+
+Email: your.email@example.com
+GitHub: https://github.com/yourusername
+
+You may be granted a commercial license under specific terms agreed upon by the author.
+
+6. This License Is Not Open Source (OSI)
+
+This is a custom license and not approved by the Open Source Initiative. If you need OSI compliance, please contact the author for dual licensing options.
+
+TL;DR (Summary)
+
+✅ Free for learning, hacking, modifying, contributing  
+✅ Must give credit  
+❌ No commercial use  
+❌ No monetization without permission  
+⚖️ Legal action may be taken against violators
