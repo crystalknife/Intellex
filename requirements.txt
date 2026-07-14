@@ -1,5 +1,0 @@
-requests
-feedparser
-openai   # if using OpenAI API (optional)
-jinja2   # for templating markdown
-ollama   # for local SLMs

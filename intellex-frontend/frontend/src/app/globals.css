@@ -1,0 +1,263 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+  Intellex Design Token System
+  Dark-first, no light mode in this sprint. Every value here is referenced
+  by name in components -- never hardcode a raw hex or magic number in a
+  component file.
+*/
+
+@theme inline {
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-inter);
+
+  /* Base surfaces */
+  --color-base: var(--intellex-base);
+  --color-surface: var(--intellex-surface);
+  --color-elevated: var(--intellex-elevated);
+  --color-overlay: var(--intellex-overlay);
+
+  /* Borders */
+  --color-border: var(--intellex-border);
+  --color-border-mid: var(--intellex-border-mid);
+  --color-border-strong: var(--intellex-border-strong);
+
+  /* Accent / signal */
+  --color-accent: var(--intellex-accent);
+  --color-accent-dim: var(--intellex-accent-dim);
+  --color-accent-glow: var(--intellex-accent-glow);
+  --color-signal: var(--intellex-signal);
+  --color-signal-dim: var(--intellex-signal-dim);
+
+  /* Status */
+  --color-positive: var(--intellex-positive);
+  --color-warning: var(--intellex-warning);
+  --color-critical: var(--intellex-critical);
+  --color-neutral: var(--intellex-neutral);
+
+  /* Text hierarchy */
+  --color-text-primary: var(--intellex-text-primary);
+  --color-text-secondary: var(--intellex-text-secondary);
+  --color-text-muted: var(--intellex-text-muted);
+  --color-text-disabled: var(--intellex-text-disabled);
+  --color-text-accent: var(--intellex-text-accent);
+
+  /* Entities */
+  --color-entity-org: var(--intellex-entity-org);
+  --color-entity-person: var(--intellex-entity-person);
+  --color-entity-gpe: var(--intellex-entity-gpe);
+  --color-entity-product: var(--intellex-entity-product);
+  --color-entity-event: var(--intellex-entity-event);
+  --color-entity-other: var(--intellex-entity-other);
+
+  /* Glass */
+  --color-glass-1: var(--intellex-glass-1);
+  --color-glass-2: var(--intellex-glass-2);
+  --color-glass-3: var(--intellex-glass-3);
+
+  /* Shadcn-compatible aliases so existing primitives (Button, Input,
+     Sheet, Avatar, Separator, DropdownMenu) render on-brand without a
+     rewrite. */
+  --color-background: var(--intellex-base);
+  --color-foreground: var(--intellex-text-primary);
+  --color-card: var(--intellex-surface);
+  --color-card-foreground: var(--intellex-text-primary);
+  --color-popover: var(--intellex-overlay);
+  --color-popover-foreground: var(--intellex-text-primary);
+  --color-primary: var(--intellex-accent);
+  --color-primary-foreground: #ffffff;
+  --color-secondary: var(--intellex-elevated);
+  --color-secondary-foreground: var(--intellex-text-primary);
+  --color-muted: var(--intellex-elevated);
+  --color-muted-foreground: var(--intellex-text-secondary);
+  --color-accent-foreground: var(--intellex-text-primary);
+  --color-destructive: var(--intellex-critical);
+  --color-input: var(--intellex-border-mid);
+  --color-ring: var(--intellex-accent);
+
+  --radius-xs: 3px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 16px;
+  --radius-3xl: 16px;
+  --radius-4xl: 9999px;
+  --radius-full: 9999px;
+
+  --text-xs: 11px;
+  --text-sm: 13px;
+  --text-base: 14px;
+  --text-md: 15px;
+  --text-lg: 18px;
+  --text-xl: 22px;
+  --text-2xl: 28px;
+  --text-3xl: 36px;
+}
+
+:root {
+  --intellex-base: #0a0a0b;
+  --intellex-surface: #111113;
+  --intellex-elevated: #16161a;
+  --intellex-overlay: #1c1c21;
+
+  --intellex-border: rgba(255, 255, 255, 0.06);
+  --intellex-border-mid: rgba(255, 255, 255, 0.1);
+  --intellex-border-strong: rgba(255, 255, 255, 0.16);
+
+  --intellex-accent: #6366f1;
+  --intellex-accent-dim: rgba(99, 102, 241, 0.12);
+  --intellex-accent-glow: rgba(99, 102, 241, 0.2);
+
+  --intellex-signal: #06b6d4;
+  --intellex-signal-dim: rgba(6, 182, 212, 0.12);
+
+  --intellex-positive: #10b981;
+  --intellex-warning: #f59e0b;
+  --intellex-critical: #ef4444;
+  --intellex-neutral: rgba(255, 255, 255, 0.36);
+
+  --intellex-text-primary: rgba(255, 255, 255, 0.92);
+  --intellex-text-secondary: rgba(255, 255, 255, 0.52);
+  --intellex-text-muted: rgba(255, 255, 255, 0.28);
+  --intellex-text-disabled: rgba(255, 255, 255, 0.16);
+  --intellex-text-accent: #818cf8;
+
+  --intellex-entity-org: #818cf8;
+  --intellex-entity-person: #34d399;
+  --intellex-entity-gpe: #fb923c;
+  --intellex-entity-product: #a78bfa;
+  --intellex-entity-event: #60a5fa;
+  --intellex-entity-other: rgba(255, 255, 255, 0.36);
+
+  --intellex-glass-1: rgba(255, 255, 255, 0.02);
+  --intellex-glass-2: rgba(255, 255, 255, 0.04);
+  --intellex-glass-3: rgba(12, 12, 14, 0.88);
+
+  --focus-ring: 0 0 0 2px var(--intellex-accent);
+  --focus-ring-outer: 0 0 0 4px var(--intellex-accent-dim);
+
+  --dur-instant: 80ms;
+  --dur-fast: 150ms;
+  --dur-base: 220ms;
+  --dur-slow: 350ms;
+  --dur-enter: 400ms;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-inout: cubic-bezier(0.45, 0, 0.55, 1);
+
+  --radius: 0.5rem;
+}
+
+/* Sprint 10.3 is dark-first only; force dark regardless of OS preference
+   so the shadcn .dark-scoped variables never need duplicating. */
+.dark,
+:root {
+  color-scheme: dark;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "cv11", "ss01";
+    letter-spacing: -0.011em;
+  }
+
+  html {
+    @apply font-sans;
+    color-scheme: dark;
+  }
+
+  ::selection {
+    background: var(--intellex-accent-glow);
+    color: var(--intellex-text-primary);
+  }
+
+  /* Thin, unobtrusive scrollbars matching the border palette. */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--intellex-border-mid);
+    border-radius: 9999px;
+    border: 2px solid var(--intellex-base);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--intellex-border-strong);
+  }
+}
+
+@layer utilities {
+  .glass-1 {
+    background: var(--intellex-glass-1);
+  }
+  .glass-2 {
+    background: var(--intellex-glass-2);
+  }
+  .glass-3 {
+    background: var(--intellex-glass-3);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  .focus-ring {
+    outline: none;
+  }
+  .focus-ring:focus-visible {
+    box-shadow: var(--focus-ring);
+  }
+
+  .enter-animate {
+    animation: intellex-enter var(--dur-enter) var(--ease-out) both;
+  }
+
+  @keyframes intellex-enter {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes intellex-pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.35;
+    }
+  }
+
+  .animate-live-pulse {
+    animation: intellex-pulse 2s var(--ease-inout) infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
