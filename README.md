@@ -3,9 +3,7 @@
 <img src="assets/banners/github-banner.png" alt="Intellex Banner" width="100%">
 
 <br>
-<br>
 
-<img src="assets/logo/logo.png" width="180" alt="Intellex Logo">
 
 # Intellex
 
