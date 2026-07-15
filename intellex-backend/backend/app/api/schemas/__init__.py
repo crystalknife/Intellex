@@ -1,6 +1,16 @@
+from .ai import AIChatRequest, AIChatResponse, AIChatTurn, AISourceResponse, AIStatusResponse
 from .analytics import PipelineStatsResponse
 from .document import DocumentListResponse, DocumentResponse
 from .event import EventDetailResponse, EventListResponse, EventResponse
+from .collection import (
+    AddCollectionItemRequest,
+    CollectionDetailResponse,
+    CollectionItemResponse,
+    CollectionListResponse,
+    CollectionResponse,
+    CreateCollectionRequest,
+    RenameCollectionRequest,
+)
 from .feed import (
     FeedSourceCreateRequest,
     FeedSourceListResponse,
@@ -8,6 +18,14 @@ from .feed import (
     FeedSourceUpdateRequest,
 )
 from .source import SourceListResponse, SourceStats
+from .auth import (
+    LoginRequest,
+    MeResponse,
+    OrganizationResponse,
+    SignupRequest,
+    TokenResponse,
+    UserResponse,
+)
 
 __all__ = [
     "DocumentResponse",
@@ -22,4 +40,22 @@ __all__ = [
     "FeedSourceListResponse",
     "FeedSourceCreateRequest",
     "FeedSourceUpdateRequest",
+    "CollectionResponse",
+    "CollectionListResponse",
+    "CollectionDetailResponse",
+    "CollectionItemResponse",
+    "CreateCollectionRequest",
+    "RenameCollectionRequest",
+    "AddCollectionItemRequest",
+    "AIStatusResponse",
+    "AIChatRequest",
+    "AIChatResponse",
+    "AIChatTurn",
+    "AISourceResponse",
+    "SignupRequest",
+    "LoginRequest",
+    "TokenResponse",
+    "UserResponse",
+    "OrganizationResponse",
+    "MeResponse",
 ]

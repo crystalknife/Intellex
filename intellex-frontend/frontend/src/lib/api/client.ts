@@ -11,6 +11,24 @@ export const apiClient = axios.create({
   },
 });
 
+// Deliberately reads localStorage directly on each request (rather than
+// importing getStoredToken from lib/api/auth) to avoid a circular
+// import -- auth.ts imports this client, so this client can't import
+// back from auth.ts.
+const TOKEN_STORAGE_KEY = "intellex.auth.token";
+
+apiClient.interceptors.request.use((config) => {
+  if (typeof window !== "undefined") {
+    const token = window.localStorage.getItem(TOKEN_STORAGE_KEY);
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  }
+
+  return config;
+});
+
 export class ApiError extends Error {
   status?: number;
 

@@ -70,6 +70,27 @@ export async function getEvents(
   };
 }
 
+export async function searchEvents(
+  query: string,
+  limit = 20
+): Promise<PaginatedResponse<EventCluster>> {
+  if (!query.trim()) {
+    return { items: [], total: 0, limit, offset: 0 };
+  }
+
+  const { data } = await apiClient.get<RawPaginated<RawEvent>>(
+    "/search/events",
+    { params: { q: query, limit } }
+  );
+
+  return {
+    items: data.items.map(toEvent),
+    total: data.total,
+    limit: data.limit,
+    offset: data.offset,
+  };
+}
+
 export async function getEvent(id: string): Promise<EventDetail> {
   const { data } = await apiClient.get<RawEventDetail>(`/events/${id}`);
 

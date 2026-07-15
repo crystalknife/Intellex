@@ -74,6 +74,44 @@ export interface FeedSource {
   createdAt: string;
 }
 
+export interface Collection {
+  id: string;
+  name: string;
+  itemCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CollectionItem {
+  id: string;
+  type: "document" | "event";
+  addedAt: string;
+  document: Document | null;
+  event: EventCluster | null;
+}
+
+export interface CollectionDetail extends Collection {
+  items: CollectionItem[];
+}
+
+export interface AIStatus {
+  configured: boolean;
+  model: string;
+}
+
+export interface AISource {
+  id: string;
+  title: string;
+  url: string;
+  source: string;
+}
+
+export interface AIChatMessage {
+  role: "user" | "assistant";
+  content: string;
+  sources?: AISource[];
+}
+
 export type EntityLabel =
   | "ORG"
   | "PERSON"
@@ -81,3 +119,32 @@ export type EntityLabel =
   | "PRODUCT"
   | "EVENT"
   | string;
+
+export interface User {
+  id: string;
+  email: string;
+  fullName: string;
+  createdAt: string;
+}
+
+export interface Organization {
+  id: string;
+  name: string;
+  createdAt: string;
+}
+
+export type OrganizationRole = "owner" | "admin" | "member";
+
+export interface AuthSession {
+  accessToken: string;
+  tokenType: string;
+  user: User;
+  organization: Organization;
+  role: OrganizationRole;
+}
+
+export interface CurrentUser {
+  user: User;
+  organization: Organization;
+  role: OrganizationRole;
+}

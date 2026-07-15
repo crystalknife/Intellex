@@ -2,7 +2,12 @@
 Application Settings
 """
 
+from pathlib import Path
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# settings.py -> config -> app -> backend  (where .env actually lives)
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
 class Settings(BaseSettings):
@@ -26,8 +31,24 @@ class Settings(BaseSettings):
     # the same event by EventBuilder.
     EVENT_KEYWORD_OVERLAP_THRESHOLD: int = 3
 
+    # AI Workspace (optional). Empty by default -- the /ai endpoints report
+    # themselves as unconfigured rather than erroring when this is unset,
+    # so the rest of the app works fine without an API key.
+    OPENROUTER_API_KEY: str = ""
+    OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
+    OPENROUTER_MODEL: str = "google/gemma-4-31b-it:free"
+
+    # Auth. JWT_SECRET has a dev-only fallback so the app still runs with
+    # zero config locally, matching the rest of this file's philosophy --
+    # but it MUST be overridden via .env with a long random value before
+    # this is ever exposed outside localhost, since anyone who knows the
+    # default can forge tokens.
+    JWT_SECRET: str = "dev-only-insecure-secret-override-in-env"
+    JWT_ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
+
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=str(BASE_DIR / ".env"),
         extra="ignore",
     )
 

@@ -13,7 +13,9 @@ export const QUERY_KEYS = {
   events: (params?: object) => ["events", params ?? {}] as const,
   event: (id: string) => ["events", id] as const,
   search: (query: string) => ["search", query] as const,
+  searchEvents: (query: string) => ["search", "events", query] as const,
   pipelineStats: () => ["analytics", "pipeline"] as const,
+  currentUser: () => ["auth", "me"] as const,
 };
 
 export const STALE_TIMES = {
@@ -39,4 +41,6 @@ export const ROUTES = {
   collections: "/collections",
   timeline: "/timeline",
   settings: "/settings",
+  login: "/login",
+  signup: "/signup",
 };

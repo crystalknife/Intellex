@@ -5,3 +5,6 @@ export * from "@/lib/api/search";
 export * from "@/lib/api/analytics";
 export * from "@/lib/api/sources";
 export * from "@/lib/api/feeds";
+export * from "@/lib/api/collections";
+export * from "@/lib/api/ai";
+export * from "@/lib/api/auth";

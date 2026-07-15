@@ -4,11 +4,15 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.api.routers import (
+    ai,
     analytics,
+    auth,
+    collections,
     documents,
     events,
     feeds,
     ingestion,
+    live,
     search,
     sources,
 )
@@ -71,3 +75,7 @@ app.include_router(analytics.router)
 app.include_router(sources.router)
 app.include_router(feeds.router)
 app.include_router(ingestion.router)
+app.include_router(collections.router)
+app.include_router(ai.router)
+app.include_router(live.router)
+app.include_router(auth.router)

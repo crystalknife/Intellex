@@ -36,9 +36,9 @@ export const navigationSections: NavigationSection[] = [
   {
     label: "Analysis",
     items: [
-      { name: "AI Workspace", href: ROUTES.aiWorkspace, icon: Compass, disabled: true },
+      { name: "AI Workspace", href: ROUTES.aiWorkspace, icon: Compass },
       { name: "Sources", href: ROUTES.sources, icon: Wifi },
-      { name: "Collections", href: ROUTES.collections, icon: Layers, disabled: true },
+      { name: "Collections", href: ROUTES.collections, icon: Layers },
     ],
   },
   {

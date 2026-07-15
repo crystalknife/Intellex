@@ -1,17 +1,26 @@
 import { FileStack } from "lucide-react";
+import Link from "next/link";
 
+import { SaveButton } from "@/components/collections/SaveButton";
 import { formatRelativeTime, truncate } from "@/lib/utils";
 import type { EventCluster } from "@/lib/types";
 
 import { EntityChip } from "./EntityChip";
 
-export function EventClusterCard({ event }: { event: EventCluster }) {
+interface EventClusterCardProps {
+  event: EventCluster;
+  /** If provided, the card content links here; SaveButton stays a
+   * sibling so it's never nested inside the anchor. */
+  href?: string;
+}
+
+export function EventClusterCard({ event, href }: EventClusterCardProps) {
   const orgs = event.entities.ORG?.slice(0, 2) ?? [];
   const people = event.entities.PERSON?.slice(0, 1) ?? [];
 
-  return (
-    <article className="group flex h-full flex-col gap-3 rounded-(--radius-lg) border border-border bg-glass-1 p-4 transition-colors duration-(--dur-fast) hover:border-border-mid">
-      <h3 className="text-sm leading-snug font-medium text-text-primary">
+  const body = (
+    <>
+      <h3 className="pr-7 text-sm leading-snug font-medium text-text-primary">
         {truncate(event.title, 88)}
       </h3>
 
@@ -39,6 +48,24 @@ export function EventClusterCard({ event }: { event: EventCluster }) {
         </span>
         <span>{formatRelativeTime(event.updatedAt)}</span>
       </div>
+    </>
+  );
+
+  return (
+    <article className="group relative flex h-full flex-col gap-3 rounded-(--radius-lg) border border-border bg-glass-1 p-4 transition-colors duration-(--dur-fast) hover:border-border-mid">
+      <SaveButton
+        itemType="event"
+        itemId={event.id}
+        className="absolute top-3 right-3 opacity-0 transition-opacity duration-(--dur-fast) group-hover:opacity-100 group-focus-within:opacity-100"
+      />
+
+      {href ? (
+        <Link href={href} className="focus-ring flex h-full flex-col gap-3">
+          {body}
+        </Link>
+      ) : (
+        body
+      )}
     </article>
   );
 }

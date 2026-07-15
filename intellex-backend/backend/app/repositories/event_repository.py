@@ -6,7 +6,7 @@ All persistence access for events goes through here.
 
 from __future__ import annotations
 
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
 from backend.app.db.models import DocumentModel, EventModel
@@ -75,6 +75,32 @@ class EventRepository:
         self.db.commit()
 
         return created
+
+    def search(
+        self, query: str, limit: int = 20
+    ) -> tuple[list[EventModel], int]:
+        pattern = f"%{query}%"
+
+        stmt = (
+            select(EventModel)
+            .options(selectinload(EventModel.documents))
+            .where(
+                or_(
+                    EventModel.title.ilike(pattern),
+                    EventModel.summary.ilike(pattern),
+                )
+            )
+        )
+
+        total = self.db.execute(
+            select(func.count()).select_from(stmt.subquery())
+        ).scalar_one()
+
+        stmt = stmt.order_by(EventModel.updated_at.desc()).limit(limit)
+
+        results = self.db.execute(stmt).scalars().all()
+
+        return list(results), total
 
     def list_events(
         self, limit: int = 20, offset: int = 0

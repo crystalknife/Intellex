@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import { KeyboardHint } from "@/components/ui/keyboard-hint";
 import { LiveDot } from "@/components/ui/live-dot";
 import { useCommandPalette } from "@/hooks/useCommandPalette";
+import { useLiveIngestion } from "@/hooks/useLiveIngestion";
 import { usePipelineStats } from "@/hooks/usePipelineStats";
 
 const CommandPalette = dynamic(
@@ -19,6 +20,25 @@ const CommandPalette = dynamic(
 export function Topbar() {
   const { open, setOpen } = useCommandPalette();
   const { data: stats } = usePipelineStats();
+  const { connectionStatus, isSyncing } = useLiveIngestion();
+
+  const ingesting = isSyncing || stats?.isRunning;
+
+  const dotStatus =
+    connectionStatus === "closed"
+      ? "critical"
+      : ingesting
+        ? "warning"
+        : "positive";
+
+  const dotLabel =
+    connectionStatus === "closed"
+      ? "Reconnecting"
+      : connectionStatus === "connecting"
+        ? "Connecting"
+        : ingesting
+          ? "Ingesting"
+          : "Live";
 
   return (
     <>
@@ -33,10 +53,7 @@ export function Topbar() {
         </button>
 
         <div className="flex items-center gap-4">
-          <LiveDot
-            status={stats?.isRunning ? "warning" : "positive"}
-            label={stats?.isRunning ? "Ingesting" : "Live"}
-          />
+          <LiveDot status={dotStatus} label={dotLabel} />
 
           <div className="flex size-7 items-center justify-center rounded-full border border-border-mid bg-glass-2 text-text-secondary">
             <User size={14} strokeWidth={1.75} />

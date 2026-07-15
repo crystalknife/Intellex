@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist_Mono, Inter } from "next/font/google";
 
 import { AppShell } from "@/components/layout/app-shell";
+import { RouteAwareShell } from "@/components/layout/route-aware-shell";
 import { SkipToContent } from "@/components/layout/skip-to-content";
 import { GlobalErrorBoundary } from "@/components/error/GlobalErrorBoundary";
 import { Providers } from "@/providers";
@@ -38,7 +39,9 @@ export default function RootLayout({
         <SkipToContent />
         <GlobalErrorBoundary>
           <Providers>
-            <AppShell>{children}</AppShell>
+            <RouteAwareShell shell={<AppShell>{children}</AppShell>}>
+              {children}
+            </RouteAwareShell>
           </Providers>
         </GlobalErrorBoundary>
       </body>

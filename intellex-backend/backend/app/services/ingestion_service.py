@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 
 from backend.app.core.engine import IntellexEngine
 from backend.app.core.logger import get_logger
+from backend.app.core.broadcaster import broadcaster
 from backend.app.db.models import DocumentModel
 from backend.app.db.session import SessionLocal
 from backend.app.domain.document import Document
@@ -64,6 +65,8 @@ class IngestionService:
         owns_session = db is None
         db = db or SessionLocal()
 
+        await broadcaster.publish("ingestion_started", {})
+
         try:
             logger.info("Starting ingestion cycle")
 
@@ -108,16 +111,21 @@ class IngestionService:
                 f"{event_repo.count()} events"
             )
 
-            return {
+            result = {
                 "fetched": fetched_count,
                 "unique": unique_count,
                 "total_documents": document_repo.count(),
                 "total_events": event_repo.count(),
             }
 
+            await broadcaster.publish("ingestion_complete", result)
+
+            return result
+
         except Exception:
             logger.exception("Ingestion cycle failed")
             db.rollback()
+            await broadcaster.publish("ingestion_failed", {})
             raise
         finally:
             self.is_running = False

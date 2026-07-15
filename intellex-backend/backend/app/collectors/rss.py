@@ -70,7 +70,13 @@ class RSSCollector(Collector):
 
         for url in self._resolve_feeds():
 
-            feed = feedparser.parse(url)
+            feed = feedparser.parse(
+                url,
+                agent=(
+                    "Mozilla/5.0 (compatible; IntellexBot/1.0; "
+                    "+https://intellex.local)"
+                ),
+            )
 
             source = feed.feed.get("title", "RSS")
 

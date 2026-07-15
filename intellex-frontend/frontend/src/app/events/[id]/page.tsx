@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SaveButton } from "@/components/collections/SaveButton";
 import { EntityChip } from "@/components/events/EntityChip";
 import { DocumentRow } from "@/components/feed/DocumentRow";
 import { useEvent } from "@/hooks/useEvent";
@@ -44,9 +45,12 @@ export default function EventDetailPage() {
       {event && (
         <>
           <div className="space-y-3">
-            <h1 className="text-2xl font-medium text-text-primary">
-              {event.title}
-            </h1>
+            <div className="flex items-start justify-between gap-4">
+              <h1 className="text-2xl font-medium text-text-primary">
+                {event.title}
+              </h1>
+              <SaveButton itemType="event" itemId={event.id} className="shrink-0" />
+            </div>
 
             <p className="text-sm text-text-muted">
               {event.documentCount} document

@@ -5,3 +5,5 @@ from . import analytics
 from . import sources
 from . import feeds
 from . import ingestion
+from . import collections
+from . import ai

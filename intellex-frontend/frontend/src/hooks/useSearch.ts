@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
-import { searchDocuments } from "@/lib/api";
+import { searchDocuments, searchEvents } from "@/lib/api";
 import { QUERY_KEYS, STALE_TIMES } from "@/lib/constants";
 
 export function useDebouncedValue<T>(value: T, delayMs = 300): T {
@@ -23,6 +23,17 @@ export function useSearch(query: string) {
   return useQuery({
     queryKey: QUERY_KEYS.search(debounced),
     queryFn: () => searchDocuments(debounced),
+    enabled: debounced.trim().length > 0,
+    staleTime: STALE_TIMES.search,
+  });
+}
+
+export function useEventSearch(query: string) {
+  const debounced = useDebouncedValue(query, 300);
+
+  return useQuery({
+    queryKey: QUERY_KEYS.searchEvents(debounced),
+    queryFn: () => searchEvents(debounced),
     enabled: debounced.trim().length > 0,
     staleTime: STALE_TIMES.search,
   });

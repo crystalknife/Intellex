@@ -1,7 +1,6 @@
 "use client";
 
 import { Layers } from "lucide-react";
-import Link from "next/link";
 import { useState } from "react";
 
 import { EmptyState } from "@/components/ui/empty-state";
@@ -58,9 +57,7 @@ export default function EventsPage() {
         <>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {data.items.map((event) => (
-              <Link key={event.id} href={`${ROUTES.events}/${event.id}`} className="focus-ring rounded-(--radius-lg)">
-                <EventClusterCard event={event} />
-              </Link>
+              <EventClusterCard key={event.id} event={event} href={`${ROUTES.events}/${event.id}`} />
             ))}
           </div>
 

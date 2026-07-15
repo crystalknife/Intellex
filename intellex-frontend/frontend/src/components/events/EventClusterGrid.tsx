@@ -50,14 +50,13 @@ export function EventClusterGrid() {
     <div className="space-y-3">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {events.map((event, index) => (
-          <Link
+          <div
             key={event.id}
-            href={`${ROUTES.events}/${event.id}`}
-            className="focus-ring enter-animate rounded-(--radius-lg)"
+            className="enter-animate"
             style={{ animationDelay: `${Math.min(index, 10) * 40}ms` }}
           >
-            <EventClusterCard event={event} />
-          </Link>
+            <EventClusterCard event={event} href={`${ROUTES.events}/${event.id}`} />
+          </div>
         ))}
       </div>
 
