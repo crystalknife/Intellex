@@ -1,7 +1,9 @@
 """
 Feed Source Repository
 
-Persistence access for configured RSS feeds.
+Persistence access for configured RSS feeds. Every method is scoped to
+a single organization_id -- feed configuration (and therefore ingestion
+itself) is private per organization.
 """
 
 from __future__ import annotations
@@ -17,9 +19,13 @@ class FeedSourceRepository:
     def __init__(self, db: Session):
         self.db = db
 
-    def list_all(self, enabled_only: bool = False) -> list[FeedSourceModel]:
-        stmt = select(FeedSourceModel).order_by(
-            FeedSourceModel.created_at.asc()
+    def list_all(
+        self, organization_id: str, enabled_only: bool = False
+    ) -> list[FeedSourceModel]:
+        stmt = (
+            select(FeedSourceModel)
+            .where(FeedSourceModel.organization_id == organization_id)
+            .order_by(FeedSourceModel.created_at.asc())
         )
 
         if enabled_only:
@@ -27,16 +33,32 @@ class FeedSourceRepository:
 
         return list(self.db.execute(stmt).scalars())
 
-    def get(self, feed_id: str) -> FeedSourceModel | None:
-        return self.db.get(FeedSourceModel, feed_id)
+    def get(
+        self, feed_id: str, organization_id: str
+    ) -> FeedSourceModel | None:
+        stmt = select(FeedSourceModel).where(
+            FeedSourceModel.id == feed_id,
+            FeedSourceModel.organization_id == organization_id,
+        )
 
-    def get_by_url(self, url: str) -> FeedSourceModel | None:
+        return self.db.execute(stmt).scalar_one_or_none()
+
+    def get_by_url(
+        self, url: str, organization_id: str
+    ) -> FeedSourceModel | None:
         return self.db.execute(
-            select(FeedSourceModel).where(FeedSourceModel.url == url)
+            select(FeedSourceModel).where(
+                FeedSourceModel.organization_id == organization_id,
+                FeedSourceModel.url == url,
+            )
         ).scalar_one_or_none()
 
-    def create(self, url: str, label: str = "") -> FeedSourceModel:
-        model = FeedSourceModel(url=url, label=label, enabled=True)
+    def create(
+        self, url: str, organization_id: str, label: str = ""
+    ) -> FeedSourceModel:
+        model = FeedSourceModel(
+            url=url, organization_id=organization_id, label=label, enabled=True
+        )
 
         self.db.add(model)
         self.db.commit()
@@ -44,8 +66,8 @@ class FeedSourceRepository:
 
         return model
 
-    def delete(self, feed_id: str) -> bool:
-        model = self.get(feed_id)
+    def delete(self, feed_id: str, organization_id: str) -> bool:
+        model = self.get(feed_id, organization_id)
 
         if model is None:
             return False
@@ -55,8 +77,10 @@ class FeedSourceRepository:
 
         return True
 
-    def set_enabled(self, feed_id: str, enabled: bool) -> FeedSourceModel | None:
-        model = self.get(feed_id)
+    def set_enabled(
+        self, feed_id: str, organization_id: str, enabled: bool
+    ) -> FeedSourceModel | None:
+        model = self.get(feed_id, organization_id)
 
         if model is None:
             return None
@@ -67,26 +91,34 @@ class FeedSourceRepository:
 
         return model
 
-    def seed_defaults_if_empty(self, default_urls: list[str]) -> None:
+    def seed_defaults_if_empty(
+        self, organization_id: str, default_urls: list[str]
+    ) -> None:
         """
-        Populates the table with the original hardcoded feed list on
-        first-ever run, so out-of-the-box behavior is unchanged. A no-op
-        on every subsequent call once any feed exists (including if the
-        user has since deleted all of them -- we don't want to silently
-        resurrect defaults after an intentional empty state... but an
-        empty *table* only ever happens pre-seed, since the table is
-        never fully emptied by normal use without deleting rows one by
-        one, so this distinction is acceptable for now).
+        Populates a brand-new organization's feed list with the original
+        default feeds on its first-ever ingestion cycle, so out-of-the-box
+        behavior is unchanged for a freshly signed-up org. A no-op on
+        every subsequent call once this org has any feed of its own
+        (including if they've since deleted all of them deliberately --
+        we don't resurrect defaults after an intentional empty state, but
+        distinguishing "never had feeds" from "emptied them" isn't tracked
+        separately, so this is an acceptable simplification for now).
         """
 
         existing = self.db.execute(
-            select(FeedSourceModel.id).limit(1)
+            select(FeedSourceModel.id)
+            .where(FeedSourceModel.organization_id == organization_id)
+            .limit(1)
         ).first()
 
         if existing is not None:
             return
 
         for url in default_urls:
-            self.db.add(FeedSourceModel(url=url, label="", enabled=True))
+            self.db.add(
+                FeedSourceModel(
+                    url=url, organization_id=organization_id, label="", enabled=True
+                )
+            )
 
         self.db.commit()

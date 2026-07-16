@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
+from backend.app.api.deps import get_current_membership
 from backend.app.api.schemas import DocumentListResponse, EventListResponse
+from backend.app.db.models import OrganizationMemberModel
 from backend.app.db.session import get_db
 from backend.app.repositories.document_repository import DocumentRepository
 from backend.app.repositories.event_repository import EventRepository
@@ -17,10 +19,11 @@ async def search(
     q: str = Query(..., min_length=1),
     limit: int = Query(default=20, ge=1, le=100),
     db: Session = Depends(get_db),
+    membership: OrganizationMemberModel = Depends(get_current_membership),
 ):
     repo = DocumentRepository(db)
 
-    results, total = repo.search(q, limit=limit)
+    results, total = repo.search(q, membership.organization_id, limit=limit)
 
     return DocumentListResponse(
         items=results,
@@ -35,9 +38,10 @@ async def search_events(
     q: str = Query(..., min_length=1),
     limit: int = Query(default=20, ge=1, le=100),
     db: Session = Depends(get_db),
+    membership: OrganizationMemberModel = Depends(get_current_membership),
 ):
     repo = EventRepository(db)
 
-    results, total = repo.search(q, limit=limit)
+    results, total = repo.search(q, membership.organization_id, limit=limit)
 
     return EventListResponse.build(results, total, limit, 0)

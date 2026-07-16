@@ -89,3 +89,9 @@ temp/
 .ipynb_checkpoints/
 
 graphify-out/
+
+# Databases
+*.db
+*.db.backup
+*.sqlite
+*.sqlite3

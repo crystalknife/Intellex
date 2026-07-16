@@ -1,0 +1,76 @@
+# Intellex - full stack local orchestration
+#
+# Assumes intellex-backend/ and intellex-frontend/ are unzipped as
+# sibling directories under the same parent folder (e.g.
+# D:\balasubrahmanya\OG Intellex\intellex-backend and
+# ...\intellex-frontend), matching the existing project layout. If you
+# move this file, update the frontend service's build context below.
+#
+# Usage:
+#   cp .env.example .env        # then fill in JWT_SECRET at minimum
+#   docker compose up --build
+#
+# Backend:  http://localhost:8000  (docs at /docs)
+# Frontend: http://localhost:3000
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-intellex}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-intellex}
+      POSTGRES_DB: ${POSTGRES_DB:-intellex}
+    volumes:
+      - intellex_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-intellex}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      # Exposed for local debugging (psql, a GUI client, etc.) -- not
+      # required for the backend service itself, which reaches postgres
+      # over the internal Docker network regardless of this mapping.
+      - "5432:5432"
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-intellex}:${POSTGRES_PASSWORD:-intellex}@postgres:5432/${POSTGRES_DB:-intellex}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
+      JWT_SECRET: '${JWT_SECRET:?JWT_SECRET must be set in .env -- generate one with: python -c "import secrets; print(secrets.token_urlsafe(48))"}'
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-10080}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENROUTER_BASE_URL: ${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
+      OPENROUTER_MODEL: ${OPENROUTER_MODEL:-google/gemma-4-31b-it:free}
+      REFRESH_INTERVAL_MINUTES: ${REFRESH_INTERVAL_MINUTES:-15}
+      RUN_INGESTION_ON_STARTUP: ${RUN_INGESTION_ON_STARTUP:-true}
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ../intellex-frontend
+      dockerfile: Dockerfile
+      args:
+        # Must be reachable from the browser, not from inside the
+        # Docker network -- see the long comment in the frontend
+        # Dockerfile. localhost:8000 is correct for `docker compose up`
+        # on your own machine; override for any real deployment.
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+
+volumes:
+  intellex_postgres_data:

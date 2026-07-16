@@ -1,10 +1,11 @@
 "use client";
 
-import { Search, User } from "lucide-react";
+import { Search } from "lucide-react";
 import dynamic from "next/dynamic";
 
 import { KeyboardHint } from "@/components/ui/keyboard-hint";
 import { LiveDot } from "@/components/ui/live-dot";
+import { AccountMenu } from "@/components/layout/account-menu";
 import { useCommandPalette } from "@/hooks/useCommandPalette";
 import { useLiveIngestion } from "@/hooks/useLiveIngestion";
 import { usePipelineStats } from "@/hooks/usePipelineStats";
@@ -55,9 +56,7 @@ export function Topbar() {
         <div className="flex items-center gap-4">
           <LiveDot status={dotStatus} label={dotLabel} />
 
-          <div className="flex size-7 items-center justify-center rounded-full border border-border-mid bg-glass-2 text-text-secondary">
-            <User size={14} strokeWidth={1.75} />
-          </div>
+          <AccountMenu />
         </div>
       </header>
 

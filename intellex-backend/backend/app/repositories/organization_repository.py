@@ -33,6 +33,9 @@ class OrganizationRepository:
     def get(self, organization_id: str) -> OrganizationModel | None:
         return self.db.get(OrganizationModel, organization_id)
 
+    def list_all(self) -> list[OrganizationModel]:
+        return list(self.db.execute(select(OrganizationModel)).scalars())
+
     def add_member(
         self, organization_id: str, user_id: str, role: str = "member"
     ) -> OrganizationMemberModel:

@@ -3,6 +3,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
+import { getStoredToken } from "@/lib/api/auth";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { QUERY_KEYS } from "@/lib/constants";
@@ -22,6 +23,12 @@ interface LiveIngestionState {
  * waiting on REFETCH_INTERVALS -- those intervals stay in place as a
  * fallback (tab throttling, a dropped connection that hasn't
  * reconnected yet), not as the primary refresh mechanism anymore.
+ *
+ * Auth: the native EventSource API can't set an Authorization header,
+ * so the token travels as a query param instead (the backend accepts
+ * it the same way for this one route -- see live.py). Never opens a
+ * connection at all when signed out, since /live/stream now requires a
+ * valid token and would just 401 in a loop otherwise.
  */
 export function useLiveIngestion(): LiveIngestionState {
   const queryClient = useQueryClient();
@@ -31,7 +38,16 @@ export function useLiveIngestion(): LiveIngestionState {
   const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
 
   useEffect(() => {
-    const source = new EventSource(`${env.API_URL}/live/stream`);
+    const token = getStoredToken();
+
+    if (!token) {
+      setConnectionStatus("closed");
+      return;
+    }
+
+    const source = new EventSource(
+      `${env.API_URL}/live/stream?token=${encodeURIComponent(token)}`
+    );
 
     setConnectionStatus("connecting");
 
@@ -40,7 +56,11 @@ export function useLiveIngestion(): LiveIngestionState {
     source.onerror = () => {
       // EventSource auto-reconnects on its own (per the `retry:` hint
       // the backend sends) -- we just reflect that we're not currently
-      // connected while it does.
+      // connected while it does. If the token itself is invalid/expired
+      // (401), the browser will keep retrying a connection that will
+      // keep failing until the person logs in again; that's an accepted
+      // tradeoff for the simplicity of not having a token-refresh flow
+      // yet (see auth Phase A/B notes).
       setConnectionStatus("closed");
     };
 

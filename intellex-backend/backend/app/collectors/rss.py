@@ -28,11 +28,15 @@ class RSSCollector(Collector):
     """
 
     def __init__(self, feeds: list[str] | None = None):
-        # Explicit override (used by tests / callers that don't want
-        # DB-driven feed configuration). When None, feeds are resolved
-        # fresh from the database on every collect() call instead --
-        # this is what lets feeds be added/removed/toggled via the API
-        # and take effect on the next ingestion cycle without a restart.
+        # Feeds are always passed in explicitly by the caller now.
+        # FeedSourceRepository is organization-scoped (feed configuration
+        # is private per org, see Phase B), so this collector has no
+        # business resolving "the" feed list from the DB itself anymore
+        # -- IngestionService resolves the calling organization's
+        # enabled feeds and passes them in per cycle. `None` falls back
+        # to DEFAULT_FEEDS, which only exists to keep the standalone
+        # debug entrypoint (IntellexEngine's default construction,
+        # main.py) usable without a DB/org context.
         self._static_feeds = feeds
 
     async def collect(self) -> list[Document]:
@@ -45,24 +49,7 @@ class RSSCollector(Collector):
         if self._static_feeds is not None:
             return self._static_feeds
 
-        # Local import to avoid a circular import at module load time
-        # (db/repositories import from app.db which is fine, but keeping
-        # this import local mirrors how the rest of the codebase avoids
-        # importing the DB layer at collector-module import time).
-        from backend.app.db.session import SessionLocal
-        from backend.app.repositories.feed_source_repository import (
-            FeedSourceRepository,
-        )
-
-        db = SessionLocal()
-
-        try:
-            repo = FeedSourceRepository(db)
-            repo.seed_defaults_if_empty(DEFAULT_FEEDS)
-
-            return [f.url for f in repo.list_all(enabled_only=True)]
-        finally:
-            db.close()
+        return DEFAULT_FEEDS
 
     def _collect_sync(self) -> list[Document]:
 

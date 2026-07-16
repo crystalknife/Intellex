@@ -53,6 +53,24 @@ apiClient.interceptors.response.use(
       status,
     });
 
+    // Distinguish "my session expired" from "I typed the wrong password
+    // on the login form" -- both are 401s, but only the former means
+    // the stored token is stale and should be cleared. A request that
+    // never carried an Authorization header (login/signup attempts)
+    // failing with 401 is just a normal credentials error the calling
+    // page already handles inline; redirecting on that would hijack
+    // the login page's own error message.
+    const hadToken = Boolean(error.config?.headers?.Authorization);
+    const onAuthPage =
+      typeof window !== "undefined" &&
+      (window.location.pathname.startsWith("/login") ||
+        window.location.pathname.startsWith("/signup"));
+
+    if (status === 401 && hadToken && typeof window !== "undefined" && !onAuthPage) {
+      window.localStorage.removeItem(TOKEN_STORAGE_KEY);
+      window.location.href = "/login";
+    }
+
     return Promise.reject(new ApiError(message, status));
   }
 );

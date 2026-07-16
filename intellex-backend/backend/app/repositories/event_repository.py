@@ -1,7 +1,9 @@
 """
 Event Repository
 
-All persistence access for events goes through here.
+All persistence access for events goes through here. Every method is
+scoped to a single organization_id -- events are private per
+organization, same as documents (see DocumentRepository).
 """
 
 from __future__ import annotations
@@ -14,27 +16,34 @@ from backend.app.domain.event import Event
 
 
 class EventRepository:
-    """Persistence access for Event records."""
+    """Persistence access for Event records, scoped per organization."""
 
     def __init__(self, db: Session):
         self.db = db
 
-    def replace_all(self, events: list[Event]) -> list[EventModel]:
+    def replace_all(
+        self, events: list[Event], organization_id: str
+    ) -> list[EventModel]:
         """
-        Replace the entire event clustering with a freshly computed one.
+        Replace this organization's entire event clustering with a
+        freshly computed one. Events are cheap to fully recompute from
+        the org's current document set on every ingestion cycle
+        (EventBuilder is deterministic given the same documents), so
+        rather than trying to diff/merge clusters across runs, we clear
+        this org's previous generation and re-derive event assignment.
 
-        Events are cheap to fully recompute from the current document set
-        on every ingestion cycle (EventBuilder is deterministic given the
-        same documents), so rather than trying to diff/merge clusters
-        across runs, we clear the previous generation and re-derive event
-        assignment on every document. Document rows themselves are never
-        touched here -- only their `event_id` foreign key.
+        Scoped strictly to organization_id on both the reset and the
+        delete -- this must never touch another organization's events
+        or documents.
         """
 
-        # Detach every document from its current event, then delete all
-        # existing event rows.
-        self.db.query(DocumentModel).update({DocumentModel.event_id: None})
-        self.db.query(EventModel).delete()
+        self.db.query(DocumentModel).filter(
+            DocumentModel.organization_id == organization_id
+        ).update({DocumentModel.event_id: None})
+
+        self.db.query(EventModel).filter(
+            EventModel.organization_id == organization_id
+        ).delete()
 
         document_ids = {
             str(doc_id)
@@ -46,7 +55,8 @@ class EventRepository:
             model.id: model
             for model in self.db.execute(
                 select(DocumentModel).where(
-                    DocumentModel.id.in_(document_ids)
+                    DocumentModel.organization_id == organization_id,
+                    DocumentModel.id.in_(document_ids),
                 )
             ).scalars()
         } if document_ids else {}
@@ -56,6 +66,7 @@ class EventRepository:
         for event in events:
             model = EventModel(
                 id=str(event.id),
+                organization_id=organization_id,
                 title=event.title,
                 summary=event.summary,
                 entities=event.entities,
@@ -76,8 +87,51 @@ class EventRepository:
 
         return created
 
+    def list_events(
+        self, organization_id: str, limit: int = 20, offset: int = 0
+    ) -> tuple[list[EventModel], int]:
+        total = self.db.execute(
+            select(func.count())
+            .select_from(EventModel)
+            .where(EventModel.organization_id == organization_id)
+        ).scalar_one()
+
+        stmt = (
+            select(EventModel)
+            .options(selectinload(EventModel.documents))
+            .where(EventModel.organization_id == organization_id)
+            .order_by(EventModel.updated_at.desc())
+            .offset(offset)
+            .limit(limit)
+        )
+
+        results = self.db.execute(stmt).scalars().all()
+
+        return list(results), total
+
+    def get(
+        self, event_id: str, organization_id: str
+    ) -> EventModel | None:
+        stmt = (
+            select(EventModel)
+            .options(selectinload(EventModel.documents))
+            .where(
+                EventModel.id == event_id,
+                EventModel.organization_id == organization_id,
+            )
+        )
+
+        return self.db.execute(stmt).scalar_one_or_none()
+
+    def count(self, organization_id: str) -> int:
+        return self.db.execute(
+            select(func.count())
+            .select_from(EventModel)
+            .where(EventModel.organization_id == organization_id)
+        ).scalar_one()
+
     def search(
-        self, query: str, limit: int = 20
+        self, query: str, organization_id: str, limit: int = 20
     ) -> tuple[list[EventModel], int]:
         pattern = f"%{query}%"
 
@@ -85,10 +139,11 @@ class EventRepository:
             select(EventModel)
             .options(selectinload(EventModel.documents))
             .where(
+                EventModel.organization_id == organization_id,
                 or_(
                     EventModel.title.ilike(pattern),
                     EventModel.summary.ilike(pattern),
-                )
+                ),
             )
         )
 
@@ -101,36 +156,3 @@ class EventRepository:
         results = self.db.execute(stmt).scalars().all()
 
         return list(results), total
-
-    def list_events(
-        self, limit: int = 20, offset: int = 0
-    ) -> tuple[list[EventModel], int]:
-        total = self.db.execute(
-            select(func.count()).select_from(EventModel)
-        ).scalar_one()
-
-        stmt = (
-            select(EventModel)
-            .options(selectinload(EventModel.documents))
-            .order_by(EventModel.updated_at.desc())
-            .offset(offset)
-            .limit(limit)
-        )
-
-        results = self.db.execute(stmt).scalars().all()
-
-        return list(results), total
-
-    def get(self, event_id: str) -> EventModel | None:
-        stmt = (
-            select(EventModel)
-            .options(selectinload(EventModel.documents))
-            .where(EventModel.id == event_id)
-        )
-
-        return self.db.execute(stmt).scalar_one_or_none()
-
-    def count(self) -> int:
-        return self.db.execute(
-            select(func.count()).select_from(EventModel)
-        ).scalar_one()

@@ -1,0 +1,70 @@
+name: Backend CI
+
+on:
+  push:
+    paths:
+      - "backend/**"
+      - "Dockerfile"
+      - "requirements.txt"
+      - ".github/workflows/backend-ci.yml"
+  pull_request:
+    paths:
+      - "backend/**"
+      - "Dockerfile"
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: pip install -r backend/requirements.txt
+
+      - name: Compile check (catches syntax errors across the whole tree)
+        run: python -m compileall backend -q
+
+      # There's no pytest suite yet (tests/ exists but is currently
+      # empty) -- this is a genuine smoke test in the meantime: boot the
+      # real FastAPI app against a throwaway SQLite DB and exercise the
+      # signup -> me -> login flow over actual HTTP, the same check used
+      # to hand-verify Phase A/B before this workflow existed.
+      - name: Boot smoke test
+        env:
+          DATABASE_URL: "sqlite:////tmp/ci_smoke.db"
+          JWT_SECRET: "ci-smoke-test-secret"
+          RUN_INGESTION_ON_STARTUP: "false"
+        run: |
+          python -c "
+          from fastapi.testclient import TestClient
+          from backend.app.api.app import app
+
+          with TestClient(app) as client:
+              assert client.get('/health').status_code == 200
+
+              r = client.post('/auth/signup', json={
+                  'email': 'ci@example.com', 'password': 'password123',
+                  'organization_name': 'CI Org',
+              })
+              assert r.status_code == 201, r.text
+              token = r.json()['access_token']
+
+              r2 = client.get('/auth/me', headers={'Authorization': f'Bearer {token}'})
+              assert r2.status_code == 200, r2.text
+
+              r3 = client.get('/documents/', headers={'Authorization': f'Bearer {token}'})
+              assert r3.status_code == 200, r3.text
+
+          print('Boot smoke test passed')
+          "
+
+      - name: Build Docker image
+        # Validates the Dockerfile builds cleanly. Not pushed anywhere
+        # yet -- no registry/hosting platform has been chosen (see
+        # project roadmap notes). Add a push step here once one is.
+        run: docker build -t intellex-backend:ci .

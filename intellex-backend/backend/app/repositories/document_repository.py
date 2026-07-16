@@ -3,6 +3,10 @@ Document Repository
 
 All persistence access for documents goes through here. Routers and
 processors never touch SQLAlchemy models or sessions directly.
+
+Every method here is scoped to a single organization_id -- documents are
+private per organization (ingestion is per-org, see IngestionService),
+so there is no "global" document query left in this file by design.
 """
 
 from __future__ import annotations
@@ -17,24 +21,30 @@ from backend.app.domain.document import Document
 
 
 class DocumentRepository:
-    """Persistence access for Document records."""
+    """Persistence access for Document records, scoped per organization."""
 
     def __init__(self, db: Session):
         self.db = db
 
-    def upsert(self, document: Document) -> DocumentModel:
+    def upsert(
+        self, document: Document, organization_id: str
+    ) -> DocumentModel:
         """
-        Insert a new document, or update an existing one matched by URL.
-
-        URL is the natural key: the same article re-collected on a later
-        ingestion cycle must resolve to the same row (and therefore the
-        same stable ID) instead of creating a duplicate.
+        Insert a new document, or update an existing one matched by
+        (organization_id, url). URL is the natural key *within an org*:
+        the same article re-collected on a later ingestion cycle for
+        the same org must resolve to the same row, but two different
+        orgs independently subscribed to the same feed each get their
+        own copy of the same article.
         """
 
         url = str(document.url)
 
         existing = self.db.execute(
-            select(DocumentModel).where(DocumentModel.url == url)
+            select(DocumentModel).where(
+                DocumentModel.organization_id == organization_id,
+                DocumentModel.url == url,
+            )
         ).scalar_one_or_none()
 
         if existing:
@@ -54,6 +64,7 @@ class DocumentRepository:
 
         model = DocumentModel(
             id=str(document.id),
+            organization_id=organization_id,
             title=document.title,
             content=document.content,
             summary=document.summary,
@@ -74,8 +85,12 @@ class DocumentRepository:
 
         return model
 
-    def bulk_upsert(self, documents: list[Document]) -> list[DocumentModel]:
-        models = [self.upsert(document) for document in documents]
+    def bulk_upsert(
+        self, documents: list[Document], organization_id: str
+    ) -> list[DocumentModel]:
+        models = [
+            self.upsert(document, organization_id) for document in documents
+        ]
 
         self.db.commit()
 
@@ -83,12 +98,15 @@ class DocumentRepository:
 
     def list_documents(
         self,
+        organization_id: str,
         limit: int = 20,
         offset: int = 0,
         source: str | None = None,
         category: str | None = None,
     ) -> tuple[list[DocumentModel], int]:
-        query = select(DocumentModel)
+        query = select(DocumentModel).where(
+            DocumentModel.organization_id == organization_id
+        )
 
         if source:
             query = query.where(DocumentModel.source == source)
@@ -110,20 +128,28 @@ class DocumentRepository:
 
         return list(results), total
 
-    def get(self, document_id: str) -> DocumentModel | None:
-        return self.db.get(DocumentModel, document_id)
+    def get(
+        self, document_id: str, organization_id: str
+    ) -> DocumentModel | None:
+        stmt = select(DocumentModel).where(
+            DocumentModel.id == document_id,
+            DocumentModel.organization_id == organization_id,
+        )
+
+        return self.db.execute(stmt).scalar_one_or_none()
 
     def search(
-        self, query: str, limit: int = 20
+        self, query: str, organization_id: str, limit: int = 20
     ) -> tuple[list[DocumentModel], int]:
         pattern = f"%{query}%"
 
         stmt = select(DocumentModel).where(
+            DocumentModel.organization_id == organization_id,
             or_(
                 DocumentModel.title.ilike(pattern),
                 DocumentModel.summary.ilike(pattern),
                 DocumentModel.content.ilike(pattern),
-            )
+            ),
         )
 
         total = self.db.execute(
@@ -138,36 +164,48 @@ class DocumentRepository:
 
         return list(results), total
 
-    def count(self) -> int:
+    def count(self, organization_id: str) -> int:
         return self.db.execute(
-            select(func.count()).select_from(DocumentModel)
+            select(func.count())
+            .select_from(DocumentModel)
+            .where(DocumentModel.organization_id == organization_id)
         ).scalar_one()
 
-    def distinct_sources(self) -> list[str]:
+    def distinct_sources(self, organization_id: str) -> list[str]:
         rows = self.db.execute(
-            select(DocumentModel.source).distinct()
+            select(DocumentModel.source)
+            .where(DocumentModel.organization_id == organization_id)
+            .distinct()
         ).scalars().all()
 
         return list(rows)
 
-    def counts_by_source(self) -> list[tuple[str, int]]:
+    def counts_by_source(self, organization_id: str) -> list[tuple[str, int]]:
         rows = self.db.execute(
             select(DocumentModel.source, func.count())
+            .where(DocumentModel.organization_id == organization_id)
             .group_by(DocumentModel.source)
             .order_by(func.count().desc())
         ).all()
 
         return [(source, count) for source, count in rows]
 
-    def most_recent_by_source(self) -> dict[str, datetime]:
+    def most_recent_by_source(
+        self, organization_id: str
+    ) -> dict[str, datetime]:
         rows = self.db.execute(
             select(DocumentModel.source, func.max(DocumentModel.collected_at))
+            .where(DocumentModel.organization_id == organization_id)
             .group_by(DocumentModel.source)
         ).all()
 
         return {source: collected_at for source, collected_at in rows}
 
-    def most_recent_collected_at(self) -> datetime | None:
+    def most_recent_collected_at(
+        self, organization_id: str
+    ) -> datetime | None:
         return self.db.execute(
-            select(func.max(DocumentModel.collected_at))
+            select(func.max(DocumentModel.collected_at)).where(
+                DocumentModel.organization_id == organization_id
+            )
         ).scalar_one_or_none()

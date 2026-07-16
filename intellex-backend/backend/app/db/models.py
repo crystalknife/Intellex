@@ -28,6 +28,10 @@ class EventModel(Base):
         String(36), primary_key=True, default=_uuid_str
     )
 
+    organization_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("organizations.id"), index=True
+    )
+
     title: Mapped[str] = mapped_column(String(512))
 
     summary: Mapped[str] = mapped_column(Text, default="")
@@ -60,18 +64,22 @@ class DocumentModel(Base):
         String(36), primary_key=True, default=_uuid_str
     )
 
+    organization_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("organizations.id"), index=True
+    )
+
     title: Mapped[str] = mapped_column(String(1024))
 
     content: Mapped[str] = mapped_column(Text, default="")
 
     summary: Mapped[str] = mapped_column(Text, default="")
 
-    # Natural key. Used to upsert documents across ingestion cycles so IDs
-    # stay stable (and duplicates from re-fetching the same feed are never
-    # inserted twice).
-    url: Mapped[str] = mapped_column(
-        String(2048), unique=True, index=True
-    )
+    # Natural key is (organization_id, url), not url alone -- two
+    # organizations independently subscribed to the same RSS feed must
+    # each get their own copy of the same article, since ingestion and
+    # document storage are private per org. Upsert matching in
+    # DocumentRepository filters on both columns together.
+    url: Mapped[str] = mapped_column(String(2048), index=True)
 
     source: Mapped[str] = mapped_column(String(256), index=True)
 
@@ -109,6 +117,9 @@ class DocumentModel(Base):
 
     __table_args__ = (
         Index("ix_documents_published_at", "published_at"),
+        UniqueConstraint(
+            "organization_id", "url", name="ux_document_org_url"
+        ),
     )
 
 
@@ -126,7 +137,13 @@ class FeedSourceModel(Base):
         String(36), primary_key=True, default=_uuid_str
     )
 
-    url: Mapped[str] = mapped_column(String(2048), unique=True)
+    organization_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("organizations.id"), index=True
+    )
+
+    # Unique per (organization_id, url), not globally -- two orgs can
+    # independently configure the same feed.
+    url: Mapped[str] = mapped_column(String(2048))
 
     label: Mapped[str] = mapped_column(String(256), default="")
 
@@ -134,6 +151,10 @@ class FeedSourceModel(Base):
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.utcnow
+    )
+
+    __table_args__ = (
+        UniqueConstraint("organization_id", "url", name="ux_feed_org_url"),
     )
 
 
@@ -146,6 +167,10 @@ class CollectionModel(Base):
 
     id: Mapped[str] = mapped_column(
         String(36), primary_key=True, default=_uuid_str
+    )
+
+    organization_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("organizations.id"), index=True
     )
 
     name: Mapped[str] = mapped_column(String(256))

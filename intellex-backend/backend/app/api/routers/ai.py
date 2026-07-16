@@ -3,8 +3,10 @@ from sqlalchemy.orm import Session
 
 from backend.app.ai.client import AINotConfiguredError, is_configured
 from backend.app.ai.service import AIRequestError, AIService
+from backend.app.api.deps import get_current_membership
 from backend.app.api.schemas import AIChatRequest, AIChatResponse, AIStatusResponse
 from backend.app.config import settings
+from backend.app.db.models import OrganizationMemberModel
 from backend.app.db.session import get_db
 
 router = APIRouter(
@@ -22,7 +24,11 @@ async def get_ai_status():
 
 
 @router.post("/chat", response_model=AIChatResponse)
-async def chat(payload: AIChatRequest, db: Session = Depends(get_db)):
+async def chat(
+    payload: AIChatRequest,
+    db: Session = Depends(get_db),
+    membership: OrganizationMemberModel = Depends(get_current_membership),
+):
     if not payload.question.strip():
         raise HTTPException(status_code=422, detail="Question cannot be empty")
 
@@ -31,6 +37,7 @@ async def chat(payload: AIChatRequest, db: Session = Depends(get_db)):
             question=payload.question,
             history=[turn.model_dump() for turn in payload.history],
             db=db,
+            organization_id=membership.organization_id,
         )
     except AINotConfiguredError:
         raise HTTPException(

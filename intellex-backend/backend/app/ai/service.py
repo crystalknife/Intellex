@@ -79,6 +79,7 @@ class AIService:
         question: str,
         history: list[ChatTurn],
         db: Session,
+        organization_id: str,
     ) -> AIAnswer:
 
         if not is_configured():
@@ -86,10 +87,12 @@ class AIService:
 
         repo = DocumentRepository(db)
 
-        results, _ = repo.search(question, limit=_MAX_CONTEXT_DOCS)
+        results, _ = repo.search(question, organization_id, limit=_MAX_CONTEXT_DOCS)
 
         if not results:
-            results, _ = repo.list_documents(limit=_MAX_CONTEXT_DOCS)
+            results, _ = repo.list_documents(
+                organization_id, limit=_MAX_CONTEXT_DOCS
+            )
 
         context_blocks = []
 
