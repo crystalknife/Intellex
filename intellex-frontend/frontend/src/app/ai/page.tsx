@@ -110,13 +110,21 @@ export default function AIWorkspacePage() {
         <EmptyState
           icon={Sparkles}
           title="AI Workspace isn't configured yet"
+<<<<<<< HEAD
           description="Add an OpenRouter API key to backend/.env to enable this. It's free -- OpenRouter's Gemma model has a no-cost tier."
+=======
+          description="Add an OpenRouter API key to backend/.env to enable this. It's free -- OpenRouter has several no-cost models, and Intellex automatically falls back across whichever ones you configure."
+>>>>>>> 76704d7 (feat: add AI workspace, authentication, collections, and platform infrastructure)
         />
 
         <div className="rounded-(--radius-lg) border border-border bg-glass-1 p-4 font-mono text-xs text-text-secondary">
           <p className="mb-2 text-text-muted"># backend/.env</p>
           <p>OPENROUTER_API_KEY=sk-or-v1-...</p>
+<<<<<<< HEAD
           <p>OPENROUTER_MODEL=google/gemma-4-31b-it:free</p>
+=======
+          <p>OPENROUTER_MODELS=google/gemma-4-31b-it:free,openrouter/free</p>
+>>>>>>> 76704d7 (feat: add AI workspace, authentication, collections, and platform infrastructure)
         </div>
 
         <p className="text-xs text-text-muted">

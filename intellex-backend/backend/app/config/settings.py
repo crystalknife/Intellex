@@ -31,12 +31,30 @@ class Settings(BaseSettings):
     # the same event by EventBuilder.
     EVENT_KEYWORD_OVERLAP_THRESHOLD: int = 3
 
+<<<<<<< HEAD
     # AI Workspace (optional). Empty by default -- the /ai endpoints report
     # themselves as unconfigured rather than erroring when this is unset,
     # so the rest of the app works fine without an API key.
     OPENROUTER_API_KEY: str = ""
     OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
     OPENROUTER_MODEL: str = "google/gemma-4-31b-it:free"
+=======
+    # AI Workspace (optional). Empty API key by default -- the /ai
+    # endpoints report themselves as unconfigured rather than erroring
+    # when it's unset, so the rest of the app works fine without one.
+    #
+    # OPENROUTER_MODELS is an ordered, comma-separated fallback list, not
+    # a single model -- AIService tries each in order (skipping ones
+    # currently in a cooldown from a recent failure) and only fails the
+    # request if every configured model fails. See app/ai/model_health.py
+    # for the health-tracking/cooldown logic and app/ai/service.py for
+    # the retry loop itself. There is deliberately no hardcoded "the
+    # model" constant anywhere else in the codebase -- this list is the
+    # only source of truth for which models are used and in what order.
+    OPENROUTER_API_KEY: str = ""
+    OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
+    OPENROUTER_MODELS: str = "google/gemma-4-31b-it:free,openrouter/free"
+>>>>>>> 76704d7 (feat: add AI workspace, authentication, collections, and platform infrastructure)
 
     # Auth. JWT_SECRET has a dev-only fallback so the app still runs with
     # zero config locally, matching the rest of this file's philosophy --
@@ -58,6 +76,14 @@ class Settings(BaseSettings):
             origin.strip()
             for origin in self.CORS_ORIGINS.split(",")
             if origin.strip()
+        ]
+
+    @property
+    def openrouter_models_list(self) -> list[str]:
+        return [
+            model.strip()
+            for model in self.OPENROUTER_MODELS.split(",")
+            if model.strip()
         ]
 
 
