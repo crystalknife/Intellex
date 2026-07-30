@@ -1,11 +1,12 @@
 "use client";
 
-import { Plus, RefreshCw, Rss, Trash2 } from "lucide-react";
+import { Mail, Plus, RefreshCw, Rss, Shield, Trash2, UserMinus, Users, X } from "lucide-react";
 import { useState } from "react";
 
 import { EmptyState } from "@/components/ui/empty-state";
 import { LiveDot } from "@/components/ui/live-dot";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useCurrentUser } from "@/hooks/useAuth";
 import {
   useAddFeed,
   useDeleteFeed,
@@ -13,8 +14,17 @@ import {
   useToggleFeed,
   useTriggerIngestion,
 } from "@/hooks/useFeeds";
+import {
+  useCreateInvite,
+  useInvites,
+  useMembers,
+  useRemoveMember,
+  useRevokeInvite,
+  useUpdateMemberRole,
+} from "@/hooks/useOrganization";
 import { usePipelineStats } from "@/hooks/usePipelineStats";
 import { ApiError } from "@/lib/api";
+import type { OrganizationRole } from "@/lib/types";
 import { cn, formatRelativeTime } from "@/lib/utils";
 
 export default function SettingsPage() {
@@ -28,6 +38,71 @@ export default function SettingsPage() {
 
   const [url, setUrl] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
+
+  const { data: currentUser } = useCurrentUser();
+  const isOwner = currentUser?.role === "owner";
+
+  const { data: members, isLoading: membersLoading } = useMembers();
+  const { data: invites } = useInvites();
+  const createInvite = useCreateInvite();
+  const updateRole = useUpdateMemberRole();
+  const removeMember = useRemoveMember();
+  const revokeInvite = useRevokeInvite();
+
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<OrganizationRole>("member");
+  const [inviteError, setInviteError] = useState<string | null>(null);
+  const [memberError, setMemberError] = useState<string | null>(null);
+  const [lastInviteToken, setLastInviteToken] = useState<string | null>(null);
+
+  function handleInvite(e: React.FormEvent) {
+    e.preventDefault();
+    setInviteError(null);
+    setLastInviteToken(null);
+
+    const trimmed = inviteEmail.trim();
+    if (!trimmed) return;
+
+    createInvite.mutate(
+      { email: trimmed, role: inviteRole },
+      {
+        onSuccess: (invite) => {
+          setInviteEmail("");
+          setLastInviteToken(invite.token);
+        },
+        onError: (error) => {
+          setInviteError(
+            error instanceof ApiError ? error.message : "Couldn't create that invite."
+          );
+        },
+      }
+    );
+  }
+
+  function handleRoleChange(userId: string, role: OrganizationRole) {
+    setMemberError(null);
+    updateRole.mutate(
+      { userId, role },
+      {
+        onError: (error) => {
+          setMemberError(
+            error instanceof ApiError ? error.message : "Couldn't change that role."
+          );
+        },
+      }
+    );
+  }
+
+  function handleRemoveMember(userId: string) {
+    setMemberError(null);
+    removeMember.mutate(userId, {
+      onError: (error) => {
+        setMemberError(
+          error instanceof ApiError ? error.message : "Couldn't remove that member."
+        );
+      },
+    });
+  }
 
   function handleAddFeed(e: React.FormEvent) {
     e.preventDefault();
@@ -212,6 +287,171 @@ export default function SettingsPage() {
           &ldquo;Run ingestion now&rdquo; above to test a new feed
           immediately.
         </p>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-xs font-medium tracking-wide text-text-secondary uppercase">
+          Team
+        </h2>
+
+        {isOwner && (
+          <form onSubmit={handleInvite} className="flex flex-col gap-2">
+            <div className="flex gap-2">
+              <input
+                type="email"
+                value={inviteEmail}
+                onChange={(e) => {
+                  setInviteEmail(e.target.value);
+                  setInviteError(null);
+                }}
+                placeholder="teammate@company.com"
+                className="focus-ring w-full rounded-(--radius-md) border border-border bg-glass-1 px-3 py-2 text-sm text-text-primary placeholder:text-text-muted"
+              />
+
+              <select
+                value={inviteRole}
+                onChange={(e) => setInviteRole(e.target.value as OrganizationRole)}
+                className="focus-ring shrink-0 rounded-(--radius-md) border border-border bg-glass-1 px-2 py-2 text-sm text-text-primary"
+              >
+                <option value="member">Member</option>
+                <option value="admin">Admin</option>
+                <option value="owner">Owner</option>
+              </select>
+
+              <button
+                type="submit"
+                disabled={createInvite.isPending || !inviteEmail.trim()}
+                className="focus-ring inline-flex shrink-0 items-center gap-1.5 rounded-(--radius-md) border border-accent/40 bg-accent-dim px-3 py-2 text-sm font-medium text-text-accent transition-colors duration-(--dur-fast) hover:bg-accent-glow disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Mail size={14} strokeWidth={1.75} />
+                Invite
+              </button>
+            </div>
+
+            {inviteError && <p className="text-xs text-critical">{inviteError}</p>}
+
+            {lastInviteToken && (
+              <div className="flex items-center justify-between gap-2 rounded-(--radius-md) border border-border-mid bg-glass-2 px-3 py-2 text-xs text-text-secondary">
+                <span className="min-w-0 flex-1 truncate">
+                  Invite created. There&rsquo;s no email sending yet -- share this
+                  token with them directly:{" "}
+                  <span className="font-mono text-text-primary">{lastInviteToken}</span>
+                </span>
+                <button
+                  onClick={() => setLastInviteToken(null)}
+                  aria-label="Dismiss"
+                  className="focus-ring shrink-0 rounded-(--radius-sm) p-0.5 hover:text-text-primary"
+                >
+                  <X size={12} strokeWidth={1.75} />
+                </button>
+              </div>
+            )}
+          </form>
+        )}
+
+        {memberError && <p className="text-xs text-critical">{memberError}</p>}
+
+        {membersLoading && (
+          <div className="space-y-1.5">
+            {Array.from({ length: 2 }).map((_, i) => (
+              <Skeleton key={i} className="h-11 w-full rounded-(--radius-md)" />
+            ))}
+          </div>
+        )}
+
+        {members && members.length > 0 && (
+          <div className="divide-y divide-border rounded-(--radius-lg) border border-border">
+            {members.map((member) => (
+              <div
+                key={member.userId}
+                className="flex items-center justify-between gap-4 px-4 py-3"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm text-text-primary">
+                    {member.fullName || member.email}
+                  </p>
+                  <p className="truncate text-xs text-text-muted">{member.email}</p>
+                </div>
+
+                <div className="flex shrink-0 items-center gap-3">
+                  {isOwner ? (
+                    <select
+                      value={member.role}
+                      onChange={(e) =>
+                        handleRoleChange(member.userId, e.target.value as OrganizationRole)
+                      }
+                      disabled={updateRole.isPending}
+                      className="focus-ring rounded-(--radius-full) border border-border-mid bg-glass-2 px-2 py-1 text-xs font-medium text-text-primary"
+                    >
+                      <option value="owner">Owner</option>
+                      <option value="admin">Admin</option>
+                      <option value="member">Member</option>
+                    </select>
+                  ) : (
+                    <span className="flex items-center gap-1 rounded-(--radius-full) border border-border-mid bg-glass-2 px-2.5 py-1 text-xs font-medium text-text-secondary">
+                      <Shield size={11} strokeWidth={1.75} />
+                      {member.role}
+                    </span>
+                  )}
+
+                  {isOwner && (
+                    <button
+                      onClick={() => handleRemoveMember(member.userId)}
+                      disabled={removeMember.isPending}
+                      aria-label={`Remove ${member.fullName || member.email}`}
+                      className="focus-ring flex size-7 items-center justify-center rounded-(--radius-sm) text-text-muted transition-colors duration-(--dur-fast) hover:bg-glass-2 hover:text-critical"
+                    >
+                      <UserMinus size={14} strokeWidth={1.75} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {members && members.length === 0 && !membersLoading && (
+          <EmptyState icon={Users} title="No members yet" description="" />
+        )}
+
+        {isOwner && invites && invites.length > 0 && (
+          <div className="space-y-1.5">
+            <p className="text-xs font-medium tracking-wide text-text-muted uppercase">
+              Pending invites
+            </p>
+
+            <div className="divide-y divide-border rounded-(--radius-lg) border border-border">
+              {invites.map((invite) => (
+                <div
+                  key={invite.id}
+                  className="flex items-center justify-between gap-4 px-4 py-3"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm text-text-primary">{invite.email}</p>
+                    <p className="text-xs text-text-muted">
+                      {invite.role} &middot; expires {formatRelativeTime(invite.expiresAt)}
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => revokeInvite.mutate(invite.id)}
+                    disabled={revokeInvite.isPending}
+                    aria-label={`Revoke invite for ${invite.email}`}
+                    className="focus-ring flex size-7 shrink-0 items-center justify-center rounded-(--radius-sm) text-text-muted transition-colors duration-(--dur-fast) hover:bg-glass-2 hover:text-critical"
+                  >
+                    <Trash2 size={14} strokeWidth={1.75} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {!isOwner && (
+          <p className="text-xs text-text-muted">
+            Only an organization owner can invite or manage teammates.
+          </p>
+        )}
       </section>
     </div>
   );

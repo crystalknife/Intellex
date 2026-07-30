@@ -148,3 +148,20 @@ export interface CurrentUser {
   organization: Organization;
   role: OrganizationRole;
 }
+
+export interface OrganizationMember {
+  userId: string;
+  email: string;
+  fullName: string;
+  role: OrganizationRole;
+  joinedAt: string;
+}
+
+export interface OrganizationInvite {
+  id: string;
+  email: string;
+  role: OrganizationRole;
+  token: string;
+  createdAt: string;
+  expiresAt: string;
+}

@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MarkdownMessage } from "@/components/ai/markdown-message";
 import { useAIStatus, useAskAI } from "@/hooks/useAI";
 import { ApiError } from "@/lib/api";
 import type { AIChatMessage } from "@/lib/types";
@@ -110,21 +111,13 @@ export default function AIWorkspacePage() {
         <EmptyState
           icon={Sparkles}
           title="AI Workspace isn't configured yet"
-<<<<<<< HEAD
-          description="Add an OpenRouter API key to backend/.env to enable this. It's free -- OpenRouter's Gemma model has a no-cost tier."
-=======
           description="Add an OpenRouter API key to backend/.env to enable this. It's free -- OpenRouter has several no-cost models, and Intellex automatically falls back across whichever ones you configure."
->>>>>>> 76704d7 (feat: add AI workspace, authentication, collections, and platform infrastructure)
         />
 
         <div className="rounded-(--radius-lg) border border-border bg-glass-1 p-4 font-mono text-xs text-text-secondary">
           <p className="mb-2 text-text-muted"># backend/.env</p>
           <p>OPENROUTER_API_KEY=sk-or-v1-...</p>
-<<<<<<< HEAD
-          <p>OPENROUTER_MODEL=google/gemma-4-31b-it:free</p>
-=======
           <p>OPENROUTER_MODELS=google/gemma-4-31b-it:free,openrouter/free</p>
->>>>>>> 76704d7 (feat: add AI workspace, authentication, collections, and platform infrastructure)
         </div>
 
         <p className="text-xs text-text-muted">
@@ -165,7 +158,11 @@ export default function AIWorkspacePage() {
                 : "mr-auto max-w-[85%] border border-border bg-glass-1 text-text-primary"
             )}
           >
-            <p className="whitespace-pre-wrap">{message.content}</p>
+            {message.role === "assistant" ? (
+              <MarkdownMessage content={message.content} sources={message.sources} />
+            ) : (
+              <p className="whitespace-pre-wrap">{message.content}</p>
+            )}
 
             {message.sources && message.sources.length > 0 && (
               <div className="flex flex-wrap gap-1.5 border-t border-border pt-2">

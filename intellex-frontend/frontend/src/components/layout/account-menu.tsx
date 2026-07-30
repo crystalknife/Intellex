@@ -7,10 +7,7 @@ import { useRouter } from "next/navigation";
 import {
   DropdownMenu,
   DropdownMenuContent,
-<<<<<<< HEAD
-=======
   DropdownMenuGroup,
->>>>>>> 76704d7 (feat: add AI workspace, authentication, collections, and platform infrastructure)
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -64,16 +61,6 @@ export function AccountMenu() {
         sideOffset={8}
         className="w-64 rounded-(--radius-lg) border border-border-mid bg-overlay p-1 text-text-primary shadow-lg"
       >
-<<<<<<< HEAD
-        <DropdownMenuLabel className="px-2 py-1.5 text-text-primary">
-          <p className="truncate text-sm font-medium">
-            {data.user.fullName || data.user.email}
-          </p>
-          <p className="truncate text-xs text-text-muted">
-            {data.user.email}
-          </p>
-        </DropdownMenuLabel>
-=======
         <DropdownMenuGroup>
           <DropdownMenuLabel className="px-2 py-1.5 text-text-primary">
             <p className="truncate text-sm font-medium">
@@ -84,7 +71,6 @@ export function AccountMenu() {
             </p>
           </DropdownMenuLabel>
         </DropdownMenuGroup>
->>>>>>> 76704d7 (feat: add AI workspace, authentication, collections, and platform infrastructure)
 
         <DropdownMenuSeparator className="bg-border" />
 

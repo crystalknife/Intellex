@@ -1,0 +1,7 @@
+-r requirements.txt
+
+# Test-only dependencies -- not installed in the production Docker
+# image (Dockerfile only installs requirements.txt), kept separate so
+# the runtime image doesn't carry test tooling it'll never use.
+pytest==9.1.1
+pytest-asyncio==1.4.0

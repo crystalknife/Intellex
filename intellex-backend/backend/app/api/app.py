@@ -13,6 +13,7 @@ from backend.app.api.routers import (
     feeds,
     ingestion,
     live,
+    organization,
     search,
     sources,
 )
@@ -79,3 +80,4 @@ app.include_router(collections.router)
 app.include_router(ai.router)
 app.include_router(live.router)
 app.include_router(auth.router)
+app.include_router(organization.router)

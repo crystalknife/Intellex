@@ -17,11 +17,6 @@ router = APIRouter(
 
 @router.get("/status", response_model=AIStatusResponse)
 async def get_ai_status():
-<<<<<<< HEAD
-    return AIStatusResponse(
-        configured=is_configured(),
-        model=settings.OPENROUTER_MODEL,
-=======
     models = settings.openrouter_models_list
 
     return AIStatusResponse(
@@ -32,7 +27,6 @@ async def get_ai_status():
         # AIChatResponse.model instead. This is just the first entry
         # in the configured list, i.e. the one normally tried first.
         model=models[0] if models else "not configured",
->>>>>>> 76704d7 (feat: add AI workspace, authentication, collections, and platform infrastructure)
     )
 
 

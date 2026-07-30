@@ -1,7 +1,34 @@
-node_modules/
-.next/
-.env.local
+# Next.js app
+**/node_modules/
+**/.next/
+
+# Environment
+**/.env.local
+**/.env.*
+
+# Git
 .git/
+.github/
 .gitignore
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Coverage
+coverage/
+.nyc_output/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
 Dockerfile
 .dockerignore

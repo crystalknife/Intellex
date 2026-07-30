@@ -7,7 +7,12 @@ class SignupRequest(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8)
     full_name: str = ""
-    organization_name: str = Field(min_length=1)
+    # Required unless invite_token is provided -- joining via invite
+    # uses the inviting org's name instead, so this becomes optional in
+    # that case. Enforced in the signup handler, not here, since the
+    # validity depends on which of the two paths is taken.
+    organization_name: str | None = None
+    invite_token: str | None = None
 
 
 class LoginRequest(BaseModel):

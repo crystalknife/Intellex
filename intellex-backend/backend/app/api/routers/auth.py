@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -53,23 +55,57 @@ async def signup(payload: SignupRequest, db: Session = Depends(get_db)):
             detail="An account with this email already exists",
         )
 
+    org_repo = OrganizationRepository(db)
+    invite = None
+
+    if payload.invite_token:
+        invite = org_repo.get_invite_by_token(payload.invite_token)
+
+        if invite is None or invite.accepted_at is not None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="This invite link is invalid or has already been used",
+            )
+
+        if invite.expires_at < datetime.utcnow():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="This invite link has expired",
+            )
+
+        if invite.email.lower() != payload.email.lower():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="This invite was issued to a different email address",
+            )
+    elif not payload.organization_name or not payload.organization_name.strip():
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="organization_name is required when signing up without an invite",
+        )
+
     user = user_repo.create(
         email=payload.email,
         hashed_password=hash_password(payload.password),
         full_name=payload.full_name,
     )
 
-    org_repo = OrganizationRepository(db)
-    org = org_repo.create(payload.organization_name.strip())
-
-    # The first user in a newly created organization is always its owner.
-    org_repo.add_member(org.id, user.id, role="owner")
+    if invite is not None:
+        org = org_repo.get(invite.organization_id)
+        role = invite.role
+        org_repo.add_member(org.id, user.id, role=role)
+        org_repo.mark_invite_accepted(invite, datetime.utcnow())
+    else:
+        org = org_repo.create(payload.organization_name.strip())
+        role = "owner"
+        # The first user in a newly created organization is always its owner.
+        org_repo.add_member(org.id, user.id, role=role)
 
     db.commit()
     db.refresh(user)
     db.refresh(org)
 
-    return _issue_token(user, OrganizationResponse.model_validate(org), "owner")
+    return _issue_token(user, OrganizationResponse.model_validate(org), role)
 
 
 @router.post("/login", response_model=TokenResponse)

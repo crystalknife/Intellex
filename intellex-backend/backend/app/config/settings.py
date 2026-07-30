@@ -31,14 +31,6 @@ class Settings(BaseSettings):
     # the same event by EventBuilder.
     EVENT_KEYWORD_OVERLAP_THRESHOLD: int = 3
 
-<<<<<<< HEAD
-    # AI Workspace (optional). Empty by default -- the /ai endpoints report
-    # themselves as unconfigured rather than erroring when this is unset,
-    # so the rest of the app works fine without an API key.
-    OPENROUTER_API_KEY: str = ""
-    OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
-    OPENROUTER_MODEL: str = "google/gemma-4-31b-it:free"
-=======
     # AI Workspace (optional). Empty API key by default -- the /ai
     # endpoints report themselves as unconfigured rather than erroring
     # when it's unset, so the rest of the app works fine without one.
@@ -54,7 +46,6 @@ class Settings(BaseSettings):
     OPENROUTER_API_KEY: str = ""
     OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
     OPENROUTER_MODELS: str = "google/gemma-4-31b-it:free,openrouter/free"
->>>>>>> 76704d7 (feat: add AI workspace, authentication, collections, and platform infrastructure)
 
     # Auth. JWT_SECRET has a dev-only fallback so the app still runs with
     # zero config locally, matching the rest of this file's philosophy --

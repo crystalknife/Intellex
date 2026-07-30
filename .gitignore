@@ -3,11 +3,10 @@
 # =========================
 .DS_Store
 Thumbs.db
-<<<<<<< HEAD
-desktop.ini
-=======
 Desktop.ini
->>>>>>> 76704d7 (feat: add AI workspace, authentication, collections, and platform infrastructure)
+$RECYCLE.BIN/
+.AppleDouble
+.LSOverride
 
 # =========================
 # Python
@@ -16,41 +15,12 @@ __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
-<<<<<<< HEAD
-*.so
 *.egg-info/
-.eggs/
-
 .pytest_cache/
-.mypy_cache/
-.ruff_cache/
-.hypothesis/
-.tox/
-.nox/
-
 .venv/
 venv/
-env/
-ENV/
-
-.coverage
-htmlcov/
-=======
-*.pyc
-*.so
-*.egg
-*.egg-info/
-.eggs/
-.pytest_cache/
 .mypy_cache/
 .ruff_cache/
-.coverage
-htmlcov/
-.venv/
-venv/
-ENV/
-env/
->>>>>>> 76704d7 (feat: add AI workspace, authentication, collections, and platform infrastructure)
 
 # =========================
 # Environment
@@ -58,27 +28,22 @@ env/
 .env
 .env.local
 .env.*
+
+# Keep environment templates
 !.env.example
 
 # =========================
 # Database
 # =========================
 *.db
+*.db.backup
 *.sqlite
 *.sqlite3
-*.db.backup
 
 # =========================
 # Logs
 # =========================
 *.log
-logs/
-<<<<<<< HEAD
-npm-debug.log*
-yarn-debug.log*
-pnpm-debug.log*
-=======
->>>>>>> 76704d7 (feat: add AI workspace, authentication, collections, and platform infrastructure)
 
 # =========================
 # Next.js
@@ -90,22 +55,12 @@ out/
 # Node
 # =========================
 node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
 
 # =========================
 # IDE
 # =========================
 .vscode/
 .idea/
-<<<<<<< HEAD
-*.iml
-=======
-*.swp
-*.swo
->>>>>>> 76704d7 (feat: add AI workspace, authentication, collections, and platform infrastructure)
 
 # =========================
 # Build
@@ -114,9 +69,11 @@ dist/
 build/
 
 # =========================
-# Docker
+# Test Coverage
 # =========================
-.docker/
+coverage/
+htmlcov/
+.cache/
 
 # =========================
 # Graphify
@@ -124,27 +81,14 @@ build/
 graphify-out/
 
 # =========================
-# Coverage & Cache
-# =========================
-coverage/
-.cache/
-<<<<<<< HEAD
-tmp/
-temp/
-.ipynb_checkpoints/
-
-graphify-out/
-
-# Databases
-*.db
-*.db.backup
-*.sqlite
-*.sqlite3
-=======
-
-# =========================
-# Project Notes (Local Only)
+# Personal Notes
 # =========================
 Guide for Intellex.txt
-Neccessary Steps After Every Spirint.txt
->>>>>>> 76704d7 (feat: add AI workspace, authentication, collections, and platform infrastructure)
+Necessary Steps After Every Sprint.txt
+
+# =========================
+# Temporary / Backup Files
+# =========================
+*.bak
+*.tmp
+*.temp

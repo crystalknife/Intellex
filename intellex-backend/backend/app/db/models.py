@@ -348,3 +348,46 @@ class OrganizationMemberModel(Base):
             "organization_id", "user_id", name="ux_org_member_unique"
         ),
     )
+
+
+class OrganizationInviteModel(Base):
+    """
+    A pending invitation to join an organization. There's no email
+    infrastructure in this project, so nothing here sends mail -- the
+    owner who creates an invite gets a token back and shares it with
+    the invitee out-of-band (a link, Slack message, whatever). The
+    invitee redeems it via POST /auth/signup's optional invite_token
+    field, which joins them to the inviting org instead of creating a
+    new one for them -- preserving the existing single-org-per-user
+    signup model rather than introducing multi-org membership.
+    """
+
+    __tablename__ = "organization_invites"
+
+    id: Mapped[str] = mapped_column(
+        String(36), primary_key=True, default=_uuid_str
+    )
+
+    organization_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("organizations.id"), index=True
+    )
+
+    email: Mapped[str] = mapped_column(String(320), index=True)
+
+    role: Mapped[str] = mapped_column(String(32), default="member")
+
+    token: Mapped[str] = mapped_column(
+        String(64), unique=True, index=True, default=lambda: uuid4().hex
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow
+    )
+
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+    accepted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+    organization: Mapped["OrganizationModel"] = relationship("OrganizationModel")

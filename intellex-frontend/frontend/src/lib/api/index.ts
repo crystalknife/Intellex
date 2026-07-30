@@ -8,3 +8,4 @@ export * from "@/lib/api/feeds";
 export * from "@/lib/api/collections";
 export * from "@/lib/api/ai";
 export * from "@/lib/api/auth";
+export * from "@/lib/api/organization";

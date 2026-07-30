@@ -1,8 +1,5 @@
 """
 AI Service
-<<<<<<< HEAD
-...
-=======
 
 Answers questions about the current document corpus using OpenRouter.
 Retrieval here is keyword/full-text search against the existing
@@ -20,23 +17,16 @@ times out, or its provider is overloaded/unavailable, the next
 configured model is tried instead of failing the request outright. See
 model_health.py for the health-tracking/cooldown bookkeeping this relies
 on.
->>>>>>> 76704d7 (feat: add AI workspace, authentication, collections, and platform infrastructure)
 """
 
 import re
 from typing import Literal, TypedDict
 
-<<<<<<< HEAD
-from sqlalchemy.orm import Session
-
-from backend.app.ai.client import AINotConfiguredError, get_client, is_configured
-=======
 import openai
 from sqlalchemy.orm import Session
 
 from backend.app.ai.client import AINotConfiguredError, get_client, is_configured
 from backend.app.ai.model_health import model_health
->>>>>>> 76704d7 (feat: add AI workspace, authentication, collections, and platform infrastructure)
 from backend.app.config import settings
 from backend.app.core.logger import get_logger
 from backend.app.repositories.document_repository import DocumentRepository
@@ -63,12 +53,6 @@ def _strip_reasoning(raw: str) -> str:
     return text.strip()
 
 
-<<<<<<< HEAD
-# --- rest of file unchanged above this point --------------------------
-
-class AIRequestError(Exception):
-    """Raised when the upstream OpenRouter call itself fails."""
-=======
 # --- model fallback classification -----------------------------------------
 
 # Exceptions that mean "this specific model/provider is temporarily
@@ -100,7 +84,6 @@ def _is_transient(error: Exception) -> bool:
 
 class AIRequestError(Exception):
     """Raised when every configured model fails to answer the request."""
->>>>>>> 76704d7 (feat: add AI workspace, authentication, collections, and platform infrastructure)
 
 
 class ChatTurn(TypedDict):
@@ -147,11 +130,6 @@ class AIService:
         if not is_configured():
             raise AINotConfiguredError()
 
-<<<<<<< HEAD
-        repo = DocumentRepository(db)
-
-        results, _ = repo.search(question, organization_id, limit=_MAX_CONTEXT_DOCS)
-=======
         configured_models = settings.openrouter_models_list
 
         if not configured_models:
@@ -166,7 +144,6 @@ class AIService:
         results, _ = repo.search(
             question, organization_id, limit=_MAX_CONTEXT_DOCS
         )
->>>>>>> 76704d7 (feat: add AI workspace, authentication, collections, and platform infrastructure)
 
         if not results:
             results, _ = repo.list_documents(
@@ -199,26 +176,6 @@ class AIService:
 
         messages.append({"role": "user", "content": question})
 
-<<<<<<< HEAD
-        client = get_client()
-
-        try:
-            response = await client.chat.completions.create(
-                model=settings.OPENROUTER_MODEL,
-                messages=messages,
-                temperature=0.3,
-                max_tokens=800,
-                extra_body={"reasoning": {"exclude": True}},
-            )
-        except Exception as e:
-            logger.error(f"OpenRouter request failed: {e}")
-            raise AIRequestError(str(e)) from e
-
-        raw_answer = response.choices[0].message.content or ""
-        answer = _strip_reasoning(raw_answer)
-
-=======
->>>>>>> 76704d7 (feat: add AI workspace, authentication, collections, and platform infrastructure)
         sources: list[AISource] = [
             {
                 "id": doc.id,
@@ -229,13 +186,6 @@ class AIService:
             for doc in results
         ]
 
-<<<<<<< HEAD
-        return {
-            "answer": answer,
-            "sources": sources,
-            "model": settings.OPENROUTER_MODEL,
-        }
-=======
         client = get_client()
         candidates = model_health.ordered_candidates(configured_models)
         last_error: Exception | None = None
@@ -292,4 +242,3 @@ class AIService:
             "AI Workspace is temporarily unavailable -- every configured "
             "model failed to respond. Please try again in a moment."
         )
->>>>>>> 76704d7 (feat: add AI workspace, authentication, collections, and platform infrastructure)

@@ -24,16 +24,25 @@ jobs:
           python-version: "3.13"
 
       - name: Install dependencies
-        run: pip install -r backend/requirements.txt
+        run: pip install -r backend/requirements-dev.txt
 
       - name: Compile check (catches syntax errors across the whole tree)
         run: python -m compileall backend -q
 
-      # There's no pytest suite yet (tests/ exists but is currently
-      # empty) -- this is a genuine smoke test in the meantime: boot the
-      # real FastAPI app against a throwaway SQLite DB and exercise the
-      # signup -> me -> login flow over actual HTTP, the same check used
-      # to hand-verify Phase A/B before this workflow existed.
+      - name: Run test suite
+        env:
+          DATABASE_URL: "sqlite:////tmp/ci_pytest.db"
+          JWT_SECRET: "ci-test-secret-not-for-production"
+          RUN_INGESTION_ON_STARTUP: "false"
+          OPENROUTER_API_KEY: "ci-test-key-not-real"
+          OPENROUTER_MODELS: "test-model-a:free,test-model-b:free"
+        run: pytest backend/tests -v
+
+      # A real pytest suite now covers auth, org isolation, and AI
+      # fallback (see backend/tests/) -- this smoke test stays as a
+      # final, even-more-realistic check that the actual production
+      # app.py boots and serves real HTTP end-to-end with its default
+      # configuration, not the CI-specific env above.
       - name: Boot smoke test
         env:
           DATABASE_URL: "sqlite:////tmp/ci_smoke.db"
